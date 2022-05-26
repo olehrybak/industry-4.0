@@ -1,6 +1,6 @@
 # Industry-4.0
 Industry 4.0 project for Agent System course
 
-General project diagram:
+# General project diagram:
 
-![industry4 0_diagram drawio-2](https://user-images.githubusercontent.com/100802720/170513404-9f4ced5b-0de4-488a-8234-7e2f9003108d.png)
+![industry4 0_diagram-2](https://user-images.githubusercontent.com/100802720/170514000-eb8b5122-e23d-4d6b-b437-0d6fd73be1e4.png)
