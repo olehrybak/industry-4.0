@@ -1,4 +1,4 @@
-package Agents;
+package com.agents;
 
 import jade.core.AID;
 import jade.core.Agent;
@@ -13,7 +13,7 @@ public class CustomerAgent extends Agent {
 
     @Override
     protected void setup(){
-        System.out.println("Customer Agent " + getLocalName() + " is up\n");
+        System.out.println("\u001B[33m" + "Customer Agent " + getLocalName() + " is up\n");
 
         Object[] args = getArguments();
         AID bigBossAgent = (AID)args[0];
@@ -22,9 +22,9 @@ public class CustomerAgent extends Agent {
             @Override
             public void action() {
                 try {
-                    Order order = new Order(getAID(), 5, "A", 3);
+                    Order order = new Order(getAID(), 20, "A", 3);
                     ACLMessage orderMessage = new ACLMessage(ACLMessage.REQUEST);
-                    System.out.println(getLocalName() + ": sending an order to the factory");
+                    System.out.println("\u001B[33m" + getLocalName() + ": sending an order to the factory");
                     orderMessage.setContentObject(order);
                     orderMessage.addReceiver(getAID("BigBoss"));
                     myAgent.send(orderMessage);
@@ -40,9 +40,9 @@ public class CustomerAgent extends Agent {
                 ACLMessage msg = receive();
                 if (msg != null) {
                     if (msg.getPerformative() == ACLMessage.AGREE){
-                        System.out.println(getLocalName() + ": factory accepted my order");
+                        System.out.println("\u001B[33m" + getLocalName() + ": factory accepted my order");
                     }else if (msg.getPerformative() == ACLMessage.REFUSE){
-                        System.out.println(getLocalName() + ": factory refused my order");
+                        System.out.println("\u001B[33m" + getLocalName() + ": factory refused my order");
                     }
                 }else{
                     block();
@@ -57,6 +57,6 @@ public class CustomerAgent extends Agent {
 
     @Override
     protected void takeDown(){
-        System.out.println("Customer Agent " + getAID().getName() + " is down\n");
+        System.out.println("\u001B[33m" + "Customer Agent " + getAID().getName() + " is down\n");
     }
 }

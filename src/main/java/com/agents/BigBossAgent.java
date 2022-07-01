@@ -1,5 +1,6 @@
-package Agents;
+package com.agents;
 
+import com.gui.GUIController;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
@@ -8,18 +9,21 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.UnreadableException;
 import jade.wrapper.AgentController;
 import jade.wrapper.StaleProxyException;
+import javafx.application.Platform;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class BigBossAgent extends Agent {
     List<AID> managersList = new ArrayList<>();
     List<Order> ordersList = new ArrayList<>();
     Order currentOrder;
+    int currentManager;
 
     @Override
     protected void setup(){
-        System.out.println("Big Boss Agent " + getLocalName() + " is up\n");
+        System.out.println("\u001B[31m" + "Big Boss Agent " + getLocalName() + " is up\n");
 
         int managerNum = 3;
         createManagers(managerNum);
@@ -27,36 +31,36 @@ public class BigBossAgent extends Agent {
         Behaviour messaging = new CyclicBehaviour() {
             @Override
             public void action() {
-                startOrderProduction();
+                //startOrderProduction();
                 ACLMessage msg = receive();
                 if (msg != null) {
                     if (msg.getPerformative() == ACLMessage.REQUEST){
                         try {
                             Order order = (Order)msg.getContentObject();
-                            System.out.println(getLocalName() + ": received an order from " + msg.getSender().getLocalName());
+                            System.out.println("\u001B[31m" + getLocalName() + ": received an order from " + msg.getSender().getLocalName());
                             ACLMessage reply = msg.createReply();
                             reply.setPerformative(ACLMessage.AGREE);
                             send(reply);
-                            ordersList.add(order);
-                            Collections.sort(ordersList);
 
+                            sendToManager(order);
                         } catch (UnreadableException e) {
                             e.printStackTrace();
                         }
                     }
-                    if (msg.getPerformative() == ACLMessage.PROPOSE) {
+                    if (msg.getPerformative() == ACLMessage.AGREE) {
                         try {
                             Order msgOrder = (Order)msg.getContentObject();
-                            if (currentOrder != null && msgOrder.orderID == currentOrder.orderID) {
-                                ACLMessage reply = msg.createReply();
-                                reply.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
-                                reply.setContentObject(currentOrder);
-                                ordersList.remove(currentOrder);
-                                currentOrder = null;
-                                System.out.println(getLocalName() + ": " + msg.getSender().getLocalName() + " is free, so I'm assigning the order to him");
-                                send(reply);
-                            }
-                        } catch (IOException | UnreadableException e) {
+                            System.out.println("\u001B[31m" + getLocalName() + ": " + msg.getSender().getLocalName() + " accepted Order#" + msgOrder.orderID);
+                        } catch (UnreadableException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    if (msg.getPerformative() == ACLMessage.REFUSE) {
+                        try {
+                            Order msgOrder = (Order) msg.getContentObject();
+                            System.out.println("\u001B[31m" + getLocalName() + ": " + msg.getSender().getLocalName() + " refused to take Order#" + msgOrder.orderID);
+                            sendToManager(msgOrder);
+                        } catch (UnreadableException e) {
                             e.printStackTrace();
                         }
                     }
@@ -72,7 +76,7 @@ public class BigBossAgent extends Agent {
                 String managerName = "Manager#" + (i+1);
                 AgentController manager = getContainerController().createNewAgent(
                         managerName,
-                        "Agents.ManagerAgent",
+                        "com.agents.ManagerAgent",
                         new Object[]{getAID()}
                 );
                 manager.start();
@@ -83,18 +87,23 @@ public class BigBossAgent extends Agent {
         }
     }
 
-    private void startOrderProduction() {
-        if (currentOrder != null || ordersList.isEmpty())
-            return;
+    private void sendToManager(Order order) {
         try {
-            currentOrder = ordersList.get(0);
-            ACLMessage message = new ACLMessage(ACLMessage.CFP);
-            message.setContentObject(currentOrder);
-            for (AID manager : managersList) {
-                message.addReceiver(manager);
-            }
-            System.out.println(getLocalName() + ": sending a request to managers");
+            ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
+            message.setContentObject(order);
+            message.addReceiver(managersList.get(currentManager));
+            System.out.println("\u001B[31m" + getLocalName() + ": sending a request to a manager");
             send(message);
+            Agent currentAgent = this;
+            Platform.runLater(new Runnable() {
+                @Override
+                public void run() {
+                    GUIController.bigBossMsg(currentAgent,"manager",managersList.get(currentManager));
+                }
+            });
+            currentManager++;
+            if (currentManager >= managersList.size())
+                currentManager = 0;
         }catch (IOException e){
             e.printStackTrace();
         }
@@ -102,6 +111,6 @@ public class BigBossAgent extends Agent {
 
     @Override
     protected void takeDown(){
-        System.out.println("Big Boss Agent " + getAID().getName() + " is down\n");
+        System.out.println("\u001B[31m" + "Big Boss Agent " + getAID().getName() + " is down\n");
     }
 }
