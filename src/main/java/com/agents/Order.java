@@ -1,4 +1,4 @@
-package Agents;
+package com.agents;
 
 import jade.core.AID;
 
@@ -11,6 +11,7 @@ public class Order implements Serializable, Comparable<Order> {
     public int quantity;
     private static int ID;
     public int orderID;
+    public Boolean isSplit;
 
     public Order(AID customerId, int deadline, String productName, int quantity){
         this.customerId = customerId;
